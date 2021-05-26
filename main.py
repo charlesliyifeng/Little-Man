@@ -16,8 +16,8 @@ async def on_message(message):
   if message.author == client.user:
     return
   
-  #if message.content.startswith('$'):
-  await message.channel.send("SHUT UP!")
+  if message.content.startswith('$hello'):
+    await message.channel.send("Hello!")
 
 def check_time(message):
   now = datetime.now()
