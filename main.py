@@ -1,10 +1,11 @@
 import discord
-import pandas
+#import pandas
 from datetime import datetime
 import os
 
 TOKEN = os.environ['TOKEN']
 client = discord.Client()
+curse_words = set()
 
 @client.event
 async def on_ready():
@@ -17,6 +18,9 @@ async def on_message(message):
   
   if check_time():
     warning(message,"chatting in class time")
+
+  if check_swearing(message.content):
+    warning(message,"profanity")
   
   if message.content.startswith('!hello'):
     await message.channel.send("Hello!")
@@ -39,10 +43,21 @@ def check_time():
       return True
   return False
 
-def check_swearing():
-  pass
+def load_curse_words():
+  with open('./data/curse_words.txt') as file:
+    for word in file:
+      curse_words.add(word.strip('\n'))
+
+def check_swearing(text):
+  processed_text = text.lower()
+  for word in curse_words:
+    if word in processed_text:
+      return True
+  return False
 
 def warning(message,reason): #deletion of message and keeping trace of user
   pass
-  
-client.run(TOKEN)
+
+if __name__ == '__main__':
+  load_curse_words()
+  client.run(TOKEN)
