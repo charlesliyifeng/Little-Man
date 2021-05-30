@@ -10,3 +10,4 @@ A discord bot responsible for managing Macleans Coding Club.
 6. !codingHelpResolve [name]
 7. !codingHelpRole [role]
 8. link google classroom updates
+9. send warning

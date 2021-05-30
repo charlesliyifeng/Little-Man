@@ -1,31 +1,45 @@
 import discord
 #import pandas
+from discord.ext import commands
 from datetime import datetime
 import os
 
 TOKEN = os.environ['TOKEN']
-client = discord.Client()
 curse_words = set()
+client = commands.Bot(command_prefix='!')
 
 @client.event
 async def on_ready():
   print(f"logged in as {client.user}")
 
+#list of commands
+@client.command(name='hello', help='Say hello to the bot!')
+async def say_hello(ctx):
+  await ctx.send("Hello!")
+
+@client.command(name='isJavascriptGood', help='Discover the correct opinion of Javascript.')
+async def java_bad(ctx):
+  await ctx.send("No")
+
+#override on_message
 @client.event
 async def on_message(message):
   if message.author == client.user:
     return
-  
+
   if check_time():
-    warning(message,"chatting in class time")
+    reason = "chatting in class time"
+    warning(message)
+    await message.channel.send(f"You have been warned for {reason}")
 
   if check_swearing(message.content):
-    warning(message,"profanity")
+    reason = "profanity"
+    warning(message)
+    await message.channel.send(f"You have been warned for {reason}")
   
-  if message.content.startswith('!hello'):
-    await message.channel.send("Hello!")
-  elif message.content.startswith('!isJavascriptGood'):
-    await message.channel.send("No")
+  #read commands
+  await client.process_commands(message)
+
 
 #message restriction in schooltime
 def check_time():
@@ -55,7 +69,7 @@ def check_swearing(text):
       return True
   return False
 
-def warning(message,reason): #deletion of message and keeping trace of user
+def warning(message): #deletion of message and keeping trace of user
   pass
 
 if __name__ == '__main__':
