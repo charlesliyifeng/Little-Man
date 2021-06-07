@@ -4,6 +4,7 @@ import time
 from discord.ext import commands
 from datetime import datetime
 import os
+import multiprocessing
 
 TOKEN = os.environ['TOKEN']
 curse_words = set()
@@ -11,12 +12,36 @@ intents = discord.Intents.default()
 intents.members = True
 client = commands.Bot(intents=intents,command_prefix='!')
 users = []
-#spam={0,0,0}
-
+admins = []
+spam = {}
+spam_detect = True
+swear_detect = True
+time_detect = True
 
 @client.event
 async def on_ready():
   print(f"logged in as {client.user}")
+
+  global members
+  #This will get all the members in the server
+  for guild in client.guilds:
+    for member in guild.members:
+      if member == client.user:
+        continue
+      print(member)
+      users.append(member)
+      spam[str(member)] = 0
+      if not (members['id'] == str(member)).any():
+        row = {"id":member,"warnings":0}
+        members = members.append(row,ignore_index=True)
+        members.to_csv("./data/club_member.csv",index=False)
+      
+      #find admins
+      for role in member.roles:
+        if role.name == "admin" or role.name == "student leader/co leader":
+          admins.append(str(member))
+          print("admin")
+          break
 
 #list of commands
 @client.command(name='hello', help='Say hello to the bot!')
@@ -27,41 +52,54 @@ async def say_hello(ctx):
 async def java_bad(ctx):
   await ctx.send("No")
 
-@client.command(name='get_members', help='utility command: update list of members for the bot')
-async def get_members(ctx):
-  await ctx.message.delete()
-  #This will get all the members in the server
-  for guild in client.guilds:
-    for member in guild.members:
-      users.append(member)
+@client.command(name='toggle_spam', help='turn on/off spam detection')
+async def toggle_spam(ctx):
+  global spam_detect
+  spam_detect = not spam_detect
+  if spam_detect:
+    await ctx.send("Spam detection on")
+  else:
+    await ctx.send("Spam detection off")
+
+@client.command(name='toggle_time', help='turn on/off time detection')
+async def toggle_time(ctx):
+  global time_detect
+  time_detect = not time_detect
+  if time_detect:
+    await ctx.send("Time detection on")
+  else:
+    await ctx.send("Time detection off")
+
+@client.command(name='toggle_swearing', help='turn on/off swearing detection')
+async def toggle_swearing(ctx):
+  global swear_detect
+  swear_detect = not swear_detect
+  if swear_detect:
+    await ctx.send("Swear detection on")
+  else:
+    await ctx.send("Swear detection off")
+  
 
 #override on_message
 @client.event
 async def on_message(message):
-  '''
-    localTime=int(time.time())%3
-  spam[2]+=1
-  spam[1]+=1
-  spam[0]+=1
-  if spam[0]>=6:
-    reason = "spam"
-    warning(message)
-    await message.channel.send(f"You have been warned for {reason}") 
-  if localTime!=int(time.time())%3:
-    localTime=int(time.time())%3
-    spam[0]=spam[1]
-    spam[1]=spam[2]
-    spam[2]=0
-  '''
-
   if message.author == client.user:
     return
 
-  if check_time():
-    await warning(message,"chatting in class time")
+  if str(message.author) not in admins:
+    if spam_detect:
+      spam[str(message.author)] += 1
+      if spam[str(message.author)] > 6:
+        await warning(message,"Spamming",True)
+        return
 
-  if check_swearing(message.content):
-    await warning(message,"profanity")
+    if time_detect and check_time():
+      await warning(message,"chatting in class time")
+      return
+
+    if swear_detect and check_swearing(message.content):
+      await warning(message,"profanity")
+      return
   
   #read commands
   await client.process_commands(message)
@@ -79,7 +117,7 @@ def check_time():
         if 12 < hour+now.minute/60 < 12+7/12: #if in lunch time for wednesday:
           return False
       else:
-        if 12.5 < hour+now.minute/60 < 12.25:
+        if 12.5 < hour+now.minute/60 < 13.25:
           return False
       return True
   return False
@@ -96,20 +134,34 @@ def check_swearing(text):
       return True
   return False
 
-
-async def warning(message,reason): #deletion of message and keeping trace of user
+async def warning(message,reason,purge=False): #deletion of message and keeping trace of user
+  author = str(message.author)
   await message.delete()
-  await message.channel.send(f"{message.author} has been warned for {reason}")
+  await message.channel.send(f"{author} has been warned for {reason}")
+
+  #delete all message by author
+  if purge:
+    await message.channel.purge(limit=10,check=lambda m:str(m.author)==author)
+
   #record warnings in df
-  members.loc[members['id'] == str(message.author),"warnings"] += 1
+  members.loc[members['id'] == author,"warnings"] += 1
   #update csv
   members.to_csv("./data/club_member.csv",index=False)
   #deliver punishment
+
+def reset_spamming():
+  while True:
+    if spam_detect:
+      for x in spam:
+        spam[x] = 0
+    time.sleep(3)
 
 if __name__ == '__main__':
   #load csv
   members = pd.read_csv("./data/club_member.csv",index_col=False)
   #load curse words before running
   load_curse_words()
+  x = multiprocessing.Process(target=reset_spamming,daemon=True)
+  x.start()
   client.run(TOKEN)
   
