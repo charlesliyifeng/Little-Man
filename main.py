@@ -5,7 +5,6 @@ from discord.ext import commands
 from datetime import datetime
 import os
 import threading
-import asyncio
 
 TOKEN = os.environ['TOKEN']
 curse_words = set()
@@ -34,6 +33,15 @@ async def on_ready():
 @client.command(name='hello', help='Say hello to the bot!')
 async def say_hello(ctx):
     await ctx.send("Hello! Good to see you.")
+
+
+@client.command(name='commands', help='list of commands')
+async def commands(ctx):
+  await ctx.send("Universal commands: !hello, !isJavascriptGood, !CodingHelp (Case sensitive)")
+  if ctx.author in admins:
+    await ctx.send("Admin commands: !load_members, !toggle_spam, !toggle_time, !toggle_swearing, !toggle_helpers, !CodingHelpResolve")
+  if ctx.author in helpers:
+    await ctx.send("Helper commands: !toggle_helpers, !CodingHelpResolve")
 
 
 @client.command(name='isJavascriptGood',help='Discover the correct opinion of Javascript.')
@@ -118,7 +126,7 @@ async def toggle_swearing(ctx):
         
 @client.command(name='toggle_helpers', help='turn on/off helper role')
 async def toggle_helper(ctx):
-  if ctx.author in helpers:
+  if ctx.author in helpers or ctx.author in admins:
     if ctx.author in lazy_helpers:
       lazy_helpers.remove(ctx.author)
       await ctx.send("Welcome back!")
@@ -152,7 +160,7 @@ def find_name(message):
 
 @client.command(name='CodingHelpResolve', help='resolve the help request')
 async def coding_help_resolve(ctx, name=None):
-    if ctx.author in admins or ctx.author in helpers:
+    if ctx.author in admins or (ctx.author in helpers and ctx.author not in lazy_helpers):
         if name in help_requests:
             del help_requests[name]
             await ctx.message.delete()
@@ -165,7 +173,7 @@ async def coding_help_resolve(ctx, name=None):
             await ctx.message.delete()
             await ctx.send("Request not found")
     else:
-        await ctx.send("Only helpers and admins can resolve requests.")
+        await ctx.send("Only active helpers and admins can resolve requests.")
 
 
 #override on_message
