@@ -14,9 +14,10 @@ intents.members = True
 client = commands.Bot(intents=intents, command_prefix='!')
 users = []
 admins = []
+lazy_helpers = []
 helpers = []
 spam = {}
-help_requests = {"Quezard#5463": "testing"}
+help_requests = {}
 spam_detect = True
 swear_detect = True
 time_detect = True
@@ -43,6 +44,13 @@ async def java_bad(ctx):
 @client.command(name='load_members')
 async def load_members(ctx=None):
     global members
+    if ctx:
+      if ctx.author not in admins:
+        await ctx.send("Insufficient privileges")
+        return
+      else:
+        await ctx.send("members reloaded!")
+      
     helpers.clear()
     admins.clear()
     spam.clear()
@@ -55,8 +63,8 @@ async def load_members(ctx=None):
             print(member)
             users.append(member)
             spam[member] = 0
-            if not (members['id'] == member).any():
-                row = {"id": member, "warnings": 0}
+            if not (members['id'] == int(member.id)).any():
+                row = {"id": int(member.id), "warnings": 0}
                 members = members.append(row, ignore_index=True)
                 members.to_csv("./data/club_member.csv", index=False)
 
@@ -68,8 +76,6 @@ async def load_members(ctx=None):
                 elif role.name == "helper":
                     helpers.append(member)
                     print("helper")
-    if ctx:
-        await ctx.send("members reloaded!")
 
 
 @client.command(name='toggle_spam', help='turn on/off spam detection')
@@ -82,7 +88,7 @@ async def toggle_spam(ctx):
         else:
             await ctx.send("Spam detection off")
     else:
-        await ctx.send("Insufficent privilages")
+        await ctx.send("Insufficent privileges")
 
 
 @client.command(name='toggle_time', help='turn on/off time detection')
@@ -95,7 +101,7 @@ async def toggle_time(ctx):
         else:
             await ctx.send("Time detection off")
     else:
-        await ctx.send("Insufficent privilages")
+        await ctx.send("Insufficent privileges")
 
 
 @client.command(name='toggle_swearing', help='turn on/off swearing detection')
@@ -108,28 +114,55 @@ async def toggle_swearing(ctx):
         else:
             await ctx.send("Swear detection off")
     else:
-        await ctx.send("Insufficent privilages")
-
-
-@client.command(name='codingHelp', help='ask for help')
-async def coding_help(ctx, *, message=None):
-    message = message or "not specified"
-    if ctx.author in help_requests:
-        await ctx.message.delete()
-        await ctx.send("request denied, you already have a pending help request.")
+        await ctx.send("Insufficent privileges")
+        
+@client.command(name='toggle_helpers', help='turn on/off helper role')
+async def toggle_helper(ctx):
+  if ctx.author in helpers:
+    if ctx.author in lazy_helpers:
+      lazy_helpers.remove(ctx.author)
+      await ctx.send("Welcome back!")
     else:
-        help_requests[ctx.author.name] = message
-        await ctx.message.delete()
-        await ctx.send("request received, please await response from the helpers.")
+      lazy_helpers.append(ctx.author)
+      await ctx.send(f"{ctx.author} is unavailable for helping at the moment.")
+  else:
+    await ctx.send("Insufficent privileges")
+       
 
+@client.command(name='CodingHelp', help='ask for help')
+async def coding_help(ctx, *, message=None):
+  message = message or "not specified"
+  if ctx.author.name in help_requests:
+    await ctx.message.delete()
+    await ctx.send("request denied, you already have a pending help request.")
+  else:
+    help_requests[ctx.author.name] = message
+    message = f"{ctx.author} needs help with: {help_requests[ctx.author.name]}"
+    await ctx.message.delete()
+    await ctx.send("request received, please await response from the helpers.")
+    for helper in helpers:
+      if helper not in lazy_helpers:
+        await helper.send(message)
+    
+def find_name(message):
+  for key in help_requests:
+    if key in message:
+      return True
+  return False
 
-@client.command(name='codingHelpResolve')
+@client.command(name='CodingHelpResolve', help='resolve the help request')
 async def coding_help_resolve(ctx, name=None):
     if ctx.author in admins or ctx.author in helpers:
         if name in help_requests:
             del help_requests[name]
+            await ctx.message.delete()
             await ctx.send("Request resolved!")
+            for helper in helpers:
+              async for message in helper.history(limit=100):
+                if (not find_name(message.content)) and message.author == client.user:
+                  await message.delete()
         else:
+            await ctx.message.delete()
             await ctx.send("Request not found")
     else:
         await ctx.send("Only helpers and admins can resolve requests.")
@@ -144,8 +177,6 @@ async def on_message(message):
 
     if message.author not in admins:
         if spam_detect:
-            print(spam[message.author])
-            print(spam)
             spam[message.author] += 1
             if spam[message.author] > 6:
                 await warning(message, "Spamming", True)
@@ -195,20 +226,17 @@ def check_swearing(text):
     return False
 
 
-async def warning(message,
-                  reason,
-                  purge=False):  #deletion of message and keeping trace of user
+async def warning(message, reason, purge=False):  #deletion of message and keeping trace of user
     author = message.author
     await message.delete()
     await message.channel.send(f"{author} has been warned for {reason}")
 
     #delete all message by author
     if purge:
-        await message.channel.purge(limit=10,
-                                    check=lambda m: m.author == author)
+        await message.channel.purge(limit=10,check=lambda m: m.author == author)
 
     #record warnings in df
-    members.loc[members['id'] == author, "warnings"] += 1
+    members.loc[members['id'] == int(author.id), "warnings"] += 1
     #update csv
     members.to_csv("./data/club_member.csv", index=False)
     #deliver punishment
@@ -223,31 +251,9 @@ def reset_spamming():
     time.sleep(3)
 
 
-async def send_dm():
-    global helpers
-    while True:
-        if bool(help_requests) and not check_time():
-            for user in help_requests:
-                message = f"{user} needs help with: {help_requests[user]}"
-                print(message)
-                for helper in helpers:
-                    await helper.send(message)
-        time.sleep(300)
-
-
-def dm_wrapper():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
-    loop.run_until_complete(send_dm())
-    loop.close()
-
-
 if __name__ == '__main__':
     #load csv
     members = pd.read_csv("./data/club_member.csv", index_col=False)
     #load curse words before running
     load_curse_words()
-    dm = threading.Thread(target=dm_wrapper, daemon=True)
-    dm.start()
     client.run(TOKEN)
