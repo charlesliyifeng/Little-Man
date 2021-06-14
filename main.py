@@ -5,6 +5,7 @@ from discord.ext import commands
 from datetime import datetime
 import os
 import threading
+from keep_alive import keep_alive
 
 TOKEN = os.environ['TOKEN']
 curse_words = set()
@@ -185,7 +186,11 @@ async def on_message(message):
 
     if message.author not in admins:
         if spam_detect:
-            spam[message.author] += 1
+            if message.author in spam:
+              spam[message.author] += 1
+            else:
+              spam[message.author] = 1
+              
             if spam[message.author] > 6:
                 await warning(message, "Spamming", True)
                 return
@@ -264,4 +269,5 @@ if __name__ == '__main__':
     members = pd.read_csv("./data/club_member.csv", index_col=False)
     #load curse words before running
     load_curse_words()
+    keep_alive()
     client.run(TOKEN)
