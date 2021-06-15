@@ -38,11 +38,11 @@ async def say_hello(ctx):
 
 @client.command(name='commands', help='list of commands')
 async def commands(ctx):
-  await ctx.send("Universal commands: !hello, !isJavascriptGood, !CodingHelp (Case sensitive)")
+  await ctx.send("Universal commands: !hello, !isJavascriptGood, !CodingHelp [message] (Case sensitive)")
   if ctx.author in admins:
-    await ctx.send("Admin commands: !load_members, !toggle_spam, !toggle_time, !toggle_swearing, !toggle_helpers, !CodingHelpResolve")
+    await ctx.send("Admin commands: !load_members, !toggle_spam, !toggle_time, !toggle_swearing, !toggle_helper, !resolve [name], !resolve_all")
   if ctx.author in helpers:
-    await ctx.send("Helper commands: !toggle_helpers, !CodingHelpResolve")
+    await ctx.send("Helper commands: !toggle_helper, !resolve [name]")
 
 
 @client.command(name='isJavascriptGood',help='Discover the correct opinion of Javascript.')
@@ -125,7 +125,7 @@ async def toggle_swearing(ctx):
     else:
         await ctx.send("Insufficent privileges")
         
-@client.command(name='toggle_helpers', help='turn on/off helper role')
+@client.command(name='toggle_helper', help='turn on/off helper role')
 async def toggle_helper(ctx):
   if ctx.author in helpers or ctx.author in admins:
     if ctx.author in lazy_helpers:
@@ -159,7 +159,7 @@ def find_name(message):
       return True
   return False
 
-@client.command(name='CodingHelpResolve', help='resolve the help request')
+@client.command(name='resolve', help='resolve the help request')
 async def coding_help_resolve(ctx, name=None):
     if ctx.author in admins or (ctx.author in helpers and ctx.author not in lazy_helpers):
         if name in help_requests:
@@ -176,6 +176,18 @@ async def coding_help_resolve(ctx, name=None):
     else:
         await ctx.send("Only active helpers and admins can resolve requests.")
 
+@client.command(name='resolve_all')
+async def resolve_all(ctx):
+  if ctx.author in admins:
+    help_requests.clear()
+    for helper in helpers:
+      async for message in helper.history(limit=100):
+        if message.author == client.user:
+          await message.delete()
+    await ctx.message.delete()
+    await ctx.send("All requests resolved!")
+  else:
+    await ctx.send("Insufficent privileges")
 
 #override on_message
 @client.event
@@ -205,6 +217,16 @@ async def on_message(message):
 
     #read commands
     await client.process_commands(message)
+
+@client.event
+async def on_member_join(member):
+  global members
+  users.append(member)
+  spam[member] = 0
+  if not (members['id'] == int(member.id)).any():
+    row = {"id": int(member.id), "warnings": 0}
+    members = members.append(row, ignore_index=True)
+    members.to_csv("./data/club_member.csv", index=False)
 
 
 #message restriction in schooltime
