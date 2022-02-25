@@ -6,6 +6,8 @@ from datetime import datetime
 import os
 import threading
 from keep_alive import keep_alive
+import pytz
+
 
 TOKEN = os.environ['TOKEN']
 curse_words = set()
@@ -38,7 +40,7 @@ async def say_hello(ctx):
 
 @client.command(name='commands', help='list of commands')
 async def commands(ctx):
-  await ctx.send("Universal commands: !hello, !isJavascriptGood, !CodingHelp [message] (Case sensitive)")
+  await ctx.send("Universal commands: !hello, !isJavascriptGood, !isPythonGood, !CodingHelp [message] (Case sensitive)")
   if ctx.author in admins:
     await ctx.send("Admin commands: !load_members, !toggle_spam, !toggle_time, !toggle_swearing, !toggle_helper, !resolve [name], !resolve_all")
   if ctx.author in helpers:
@@ -47,7 +49,12 @@ async def commands(ctx):
 
 @client.command(name='isJavascriptGood',help='Discover the correct opinion of Javascript.')
 async def java_bad(ctx):
-    await ctx.send("No")
+    await ctx.send("Absolutely Not.")
+
+
+@client.command(name='isPythonGood',help='Discover the correct opinion of Python.')
+async def python_good(ctx):
+    await ctx.send("Absolutely!")
 
 
 @client.command(name='load_members')
@@ -231,18 +238,15 @@ async def on_member_join(member):
 
 #message restriction in schooltime
 def check_time():
-    today = datetime.today()
-    now = datetime.fromtimestamp(time.time() + 43200)
-    hour = now.hour
-    #12:30 - 13:15  13:00 - 13:35
-    if today.weekday() < 5:
-        if 8 < hour + now.minute / 60 < 14.25:
-            if today.weekday() == 2:  #wednesday
-                if 12 < hour + now.minute / 60 < 12 + 7 / 12:  #if in lunch time for wednesday:
-                    return False
-            else:
-                if 12.5 < hour + now.minute / 60 < 13.25:
-                    return False
+    now = datetime.now()
+    nz = pytz.timezone('Pacific/Auckland')
+    now = now.astimezone(nz)
+    hour = now.hour + now.minute / 60
+    #12:30 - 13:15
+    if now.weekday() < 5:
+        if 9 <= hour < 15.25:
+            if 12.5 <= hour < 13.25:
+                return False
             return True
     return False
 
