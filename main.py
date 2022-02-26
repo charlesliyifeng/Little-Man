@@ -260,7 +260,13 @@ def load_curse_words():
 def check_swearing(text):
     processed_text = text.lower()
     for word in curse_words:
+      if ' ' in word:
         if word in processed_text:
+            with open('./data/swear_logs.txt','a') as file:
+                file.write(processed_text+'\n')
+            return True
+      else:
+        if word in processed_text.split():
             with open('./data/swear_logs.txt','a') as file:
                 file.write(processed_text+'\n')
             return True
