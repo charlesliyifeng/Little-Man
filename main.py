@@ -210,7 +210,7 @@ async def on_message(message):
             else:
               spam[message.author] = 1
               
-            if spam[message.author] > 6:
+            if spam[message.author] > 2:
                 await warning(message, "Spamming", True)
                 return
 
