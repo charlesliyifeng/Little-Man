@@ -48,13 +48,13 @@ async def commands(ctx):
 
 
 @client.command(name='isJavascriptGood',help='Discover the correct opinion of Javascript.')
-async def java_bad(ctx):
-    await ctx.send("Absolutely Not.")
+async def javascript_good(ctx):
+    await ctx.send("Absolutely!")
 
 
 @client.command(name='isPythonGood',help='Discover the correct opinion of Python.')
 async def python_good(ctx):
-    await ctx.send("Absolutely!")
+    await ctx.send("What's Python")
 
 
 @client.command(name='load_members')
