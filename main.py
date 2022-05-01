@@ -1,307 +1,449 @@
-import discord
-import pandas as pd
-import time
-from discord.ext import commands
-from datetime import datetime
 import os
-import threading
+import discord
+import random
+import time
+from datetime import datetime
 from keep_alive import keep_alive
+import threading
 import pytz
 
+client=discord.Client()
 
-TOKEN = os.environ['TOKEN']
-curse_words = set()
-intents = discord.Intents.default()
-intents.members = True
-client = commands.Bot(intents=intents, command_prefix='!')
-users = []
-admins = []
-lazy_helpers = []
-helpers = []
-spam = {}
-help_requests = {}
-spam_detect = True
-swear_detect = True
-time_detect = True
+####################################################################
 
+#-------------------------------------------------------------------
+date=[0,0,0,False]
+#-------------------------------------------------------------------
 
-@client.event
-async def on_ready():
-    print(f"logged in as {client.user}")
-    await load_members()
-    spm = threading.Thread(target=reset_spamming, daemon=True)
-    spm.start()
+spam=[["asdf",0],["fdas",1],["fddds",2]]
+users_spam=[]
+users_sware=[]
+user_spam=[]
+user_sware=[]
+shut_up=False
 
-#list of commands
-@client.command(name='hello', help='Say hello to the bot!')
-async def say_hello(ctx):
-    await ctx.send("Hello! Good to see you.")
+userMuted=[]
+userTimed=[]
 
+####################################################################
 
-@client.command(name='commands', help='list of commands')
-async def commands(ctx):
-  await ctx.send("Universal commands: !hello, !isJavascriptGood, !isPythonGood, !CodingHelp [message] (Case sensitive)")
-  if ctx.author in admins:
-    await ctx.send("Admin commands: !load_members, !toggle_spam, !toggle_time, !toggle_swearing, !toggle_helper, !resolve [name], !resolve_all")
-  if ctx.author in helpers:
-    await ctx.send("Helper commands: !toggle_helper, !resolve [name]")
+def get_class_chat():
+  x=datetime.now(pytz.timezone("Pacific/Auckland"))
+  if(x.hour>=9)&(x.hour<=15)&(not x.strftime("%A").startswith('S')):
+    return True
+  return False
 
+####################################################################
 
-@client.command(name='isJavascriptGood',help='Discover the correct opinion of Javascript.')
-async def javascript_good(ctx):
-    await ctx.send("Absolutely!")
+def muteUnmuteUser():
+  global userMuted
+  global userTimed
+  while True:
+    time.sleep(1)
+    for i in range(0,len(userTimed)):
+      userTimed[i]-=1
+      if(userTimed[i]<0):
+        userTimed.pop(i)
+        userMuted.pop(i)
 
+####################################################################
 
-@client.command(name='isPythonGood',help='Discover the correct opinion of Python.')
-async def python_good(ctx):
-    await ctx.send("What's Python")
+is_sware=True
+is_spam=True
+is_chat=True
 
+robot=2
 
-@client.command(name='load_members')
-async def load_members(ctx=None):
-    global members
-    if ctx:
-      if ctx.author not in admins:
-        await ctx.send("Insufficient privileges")
-        return
-      else:
-        await ctx.send("members reloaded!")
-      
-    helpers.clear()
-    admins.clear()
-    spam.clear()
-    users.clear()
-    #This will get all the members in the server
-    for guild in client.guilds:
-        for member in guild.members:
-            if member == client.user:
-                continue
-            print(member)
-            users.append(member)
-            spam[member] = 0
-            if not (members['id'] == int(member.id)).any():
-                row = {"id": int(member.id), "warnings": 0}
-                members = members.append(row, ignore_index=True)
-                members.to_csv("./data/club_member.csv", index=False)
+####################################################################
 
-            #find admins
-            for role in member.roles:
-                if role.name == "admin" or role.name == "student leader/co leader":
-                    admins.append(member)
-                    print("admin")
-                elif role.name == "helper":
-                    helpers.append(member)
-                    print("helper")
+def shutUpB(m):
+  global shut_up
+  if m.upper()=="$SHUT_UP":
+    shut_up=not shut_up
+    return True
+  return shut_up
 
+####################################################################
 
-@client.command(name='toggle_spam', help='turn on/off spam detection')
-async def toggle_spam(ctx):
-    global spam_detect
-    if ctx.author in admins:
-        spam_detect = not spam_detect
-        if spam_detect:
-            await ctx.send("Spam detection on")
-        else:
-            await ctx.send("Spam detection off")
+def get_chat():
+  temp=(date[0]>8)&(date[0]<=15)
+  return temp&(not date[3])
+
+####################################################################
+
+def join_index(index):
+  result=""
+  for i in range(0,len(index)):
+    result+=index[i]
+  return result
+
+####################################################################
+
+def mute_id(mute):
+  temp=mute[1].split('@')[1]
+  temp2=temp.split('>')[0]
+  return int(temp2)
+
+####################################################################
+
+def add_user(owner,code):
+  if code==0:
+    global users_sware
+    global user_sware
+    if owner in users_sware:
+      user_sware[users_sware.index(owner)]+=1
+      if user_sware[users_sware.index(owner)]>=5:
+        user_sware.pop(users_sware.index(owner))
+        users_sware.remove(owner)
+        return True
     else:
-        await ctx.send("Insufficent privileges")
-
-
-@client.command(name='toggle_time', help='turn on/off time detection')
-async def toggle_time(ctx):
-    global time_detect
-    if ctx.author in admins:
-        time_detect = not time_detect
-        if time_detect:
-            await ctx.send("Time detection on")
-        else:
-            await ctx.send("Time detection off")
-    else:
-        await ctx.send("Insufficent privileges")
-
-
-@client.command(name='toggle_swearing', help='turn on/off swearing detection')
-async def toggle_swearing(ctx):
-    global swear_detect
-    if ctx.author in admins:
-        swear_detect = not swear_detect
-        if swear_detect:
-            await ctx.send("Swear detection on")
-        else:
-            await ctx.send("Swear detection off")
-    else:
-        await ctx.send("Insufficent privileges")
-        
-@client.command(name='toggle_helper', help='turn on/off helper role')
-async def toggle_helper(ctx):
-  if ctx.author in helpers or ctx.author in admins:
-    if ctx.author in lazy_helpers:
-      lazy_helpers.remove(ctx.author)
-      await ctx.send("Welcome back!")
-    else:
-      lazy_helpers.append(ctx.author)
-      await ctx.send(f"{ctx.author} is unavailable for helping at the moment.")
+      users_sware.append(owner)
+      user_sware.append(1)
   else:
-    await ctx.send("Insufficent privileges")
-       
+    global user_spam
+    if owner in users_spam:
+      user_spam[users_spam.index(owner)]+=1
+      if user_spam[users_spam.index(owner)]>=5:
+        user_spam.pop(users_spam.index(owner))
+        users_spam.remove(owner)
+        return True
+    else:
+      users_spam.append(owner)
+      user_spam.append(1)
+  return False
 
-@client.command(name='CodingHelp', help='ask for help')
-async def coding_help(ctx, *, message=None):
-  message = message or "not specified"
-  if ctx.author.name in help_requests:
-    await ctx.message.delete()
-    await ctx.send("request denied, you already have a pending help request.")
-  else:
-    help_requests[ctx.author.name] = message
-    message = f"{ctx.author} needs help with: {help_requests[ctx.author.name]}"
-    await ctx.message.delete()
-    await ctx.send("request received, please await response from the helpers.")
-    for helper in helpers:
-      if helper not in lazy_helpers:
-        await helper.send(message)
-    
-def find_name(message):
-  for key in help_requests:
-    if key in message:
+####################################################################
+
+def testAdmin(message):
+  isAdmin=message.author.guild_permissions.administrator
+  return isAdmin|(message.author.id==850152449989935105)
+
+####################################################################
+
+def get_quote(quote):
+  quotes=[
+    #0
+    [
+      "DON'T KNOW HOW THAT WORKS BUT... HI!",
+      "UNKNOWN COMMAND SORRY~",
+      "SORRY BUT THAT SENTENCE IS UNCLEAR TO ME...",
+      "UNEXPECTED ERROR: MESSAGE NOT RECOGNIZED"
+    ],
+    #1
+    [
+      "HELLO!",
+      "HELLO HUMAN ;)",
+      "HI MY FELLA HUMAN",
+      "HI I'M BENDER!",
+      "HELLO I'M BENDER",
+      "HI PERSON :D",
+      "HI",
+      "SUP"
+    ],
+    #2
+    [
+      "AYO!",
+      "NONE OF THAT WORD IS ALLOWD",
+      "IT IS BAD",
+      "SHUT UP AND STOP SAYING THAT WORD",
+      "DO NOT DO THAT EVER AGAIN",
+      "YOU ARE ON MY LIST, HUMAN"
+    ],
+    #3
+    [
+      "SPAM DETECTED",
+      "NO SPAMMING",
+      "SHUSH IT'S ANOYING",
+      "STOP SPAMMING! DON'T DO IT!",
+      "YOU ARE ON MY LIST, HUMAN"
+    ],
+    #4
+    [
+      "HEY! YOU ARE NO ADMIN",
+      "NOT ALOWD, YOU ARE JUST A HUMAN",
+      "SORRY, NO HUMANS ALLOWD TO TOUCH THIS",
+      "ACCESS DENIDED",
+      "ONLY ADMINS ALOWD!"
+    ],
+    #5
+    [
+      "HUMAN YOU HAVE JUST BEEN MUTED",
+      "HUMAN, YOU ARE NOW NOT ALLOWD TO CHAT FOR A LONG TIME",
+      "YOU ARE DEAD TO ME",
+      "YOUR PRIVILEGE TO CHAT IS NOW BEING REMOVED"
+    ],
+    #6
+    [
+      "HELLO FELLA ROBOT!",
+      "FINALLY, ANOTHER ALIVE ROBOT SPEEKING",
+      "FOUND MYSELF A NEW ROBOT LUCKY ME!",
+      "HI IM BENDER! NICE TO MEET YOU, ROBOT!"
+    ],
+    #7
+    [
+      "DO NOT CHAT IN CLASS TIME",
+      "IT'S BAD TO CHAT NOW",
+      "SHUT UP AND STOP CHATTING",
+      "YOU WILL REGRED THIS"
+    ]
+  ]
+  return quotes[quote][random.randint(0,len(quotes[quote])-1)]
+
+####################################################################
+
+def get_respond(respond,code):
+  responds=[
+    #0
+    [
+      "HELLO",
+      "HI",
+      "GREETINGS",
+      "GREETING",
+      "HELLO BENDER",
+      "HI BENDER",
+      "WASSUP",
+      "WASSUP BENDER",
+      "ALOHA",
+      "SUP",
+      "SUP BENDER",
+      "BENDER"
+    ],
+    #1
+    [
+      "TOGGLE_SWEAR"
+    ],
+    #2
+    [
+      "TOGGLE_SPAM"
+    ],
+    #3
+    [
+      "MUTE"
+    ],
+    #4
+    [
+      "UNMUTE"
+    ],
+    #5
+    [
+      "TOGGLE_CHAT"
+    ],
+    #6
+    [
+      "HELP"
+    ]
+  ]
+  if code==69420:
+    return "||~~***$HELLO\n$TOGGLE_SWEAR\n$TOGGLE_SPAM\n$TOGGLE_CHAT\n$MUTE USERNAME TIME\n$UNMUTE USERNAME TIME***~~||"
+  
+  return respond[1:].split()[0].upper() in responds[code]
+
+####################################################################
+
+def get_sware_words(sware):
+  sware_words=[
+    "FUCK",
+    "UWU",
+    "OWO",
+    "FUCCK",
+    "FUUCK",
+    "SHIT",
+    "BITCH",
+    "DICK",
+    "FCK",
+    "NIGGA",
+    "NIGGER",
+    "PORN",
+    "SEX",
+    "HENTAIL",
+    "PENIS",
+    "ANAL",
+    "GAY",
+    "@EVERYONE"
+  ]
+  for i in range(0,len(sware_words)):
+    if sware_words[i] in join_index(sware.upper().split()):
       return True
   return False
 
-@client.command(name='resolve', help='resolve the help request')
-async def coding_help_resolve(ctx, name=None):
-    if ctx.author in admins or (ctx.author in helpers and ctx.author not in lazy_helpers):
-        if name in help_requests:
-            del help_requests[name]
-            await ctx.message.delete()
-            await ctx.send("Request resolved!")
-            for helper in helpers:
-              async for message in helper.history(limit=100):
-                if (not find_name(message.content)) and message.author == client.user:
-                  await message.delete()
-        else:
-            await ctx.message.delete()
-            await ctx.send("Request not found")
-    else:
-        await ctx.send("Only active helpers and admins can resolve requests.")
+####################################################################
 
-@client.command(name='resolve_all')
-async def resolve_all(ctx):
-  if ctx.author in admins:
-    help_requests.clear()
-    for helper in helpers:
-      async for message in helper.history(limit=100):
-        if message.author == client.user:
-          await message.delete()
-    await ctx.message.delete()
-    await ctx.send("All requests resolved!")
-  else:
-    await ctx.send("Insufficent privileges")
+def get_spam(author,time):
+  global spam
+  spam=[spam[1],spam[2],[author,time]]
+  if(spam[0][0]==spam[2][0])&(abs(spam[0][1]-spam[2][1])<2):
+    return True
+  return False
 
-#override on_message
+####################################################################
+#-------------------------------------------------------------------
+
+@client.event
+async def on_ready():
+  await client.change_presence(status=discord.Status.offline)
+  print("BENDER IS HERE!")
+
+####################################################################
+#-------------------------------------------------------------------
+
 @client.event
 async def on_message(message):
-    global spam
-    if message.author == client.user:
-        return
+  if message.author==client.user:
+    return
+  if shutUpB(message.content):
+    return
+  
+  ####################################################################
 
-    if message.author not in admins:
-        if spam_detect:
-            if message.author in spam:
-              spam[message.author] += 1
-            else:
-              spam[message.author] = 1
-              
-            if spam[message.author] > 2:
-                await warning(message, "Spamming", True)
-                return
-
-        if time_detect and check_time():
-            await warning(message, "chatting in class time")
-            return
-
-        if swear_detect and check_swearing(message.content):
-            await warning(message, "profanity")
-            return
-
-    #read commands
-    await client.process_commands(message)
-
-@client.event
-async def on_member_join(member):
-  global members
-  users.append(member)
-  spam[member] = 0
-  if not (members['id'] == int(member.id)).any():
-    row = {"id": int(member.id), "warnings": 0}
-    members = members.append(row, ignore_index=True)
-    members.to_csv("./data/club_member.csv", index=False)
-
-
-#message restriction in schooltime
-def check_time():
-    now = datetime.now()
-    nz = pytz.timezone('Pacific/Auckland')
-    now = now.astimezone(nz)
-    hour = now.hour + now.minute / 60
-    #12:30 - 13:15
-    if now.weekday() < 5:
-        if 9 <= hour < 15.25:
-            if 12.5 <= hour < 13.25:
-                return False
-            return True
-    return False
-
-
-def load_curse_words():
-    with open('./data/curse_words.txt') as file:
-        for word in file:
-            curse_words.add(word.strip('\n'))
-
-
-def check_swearing(text):
-    processed_text = text.lower()
-    for word in curse_words:
-      if ' ' in word:
-        if word in processed_text:
-            with open('./data/swear_logs.txt','a') as file:
-                file.write(processed_text+'\n')
-            return True
-      else:
-        if word in processed_text.split():
-            with open('./data/swear_logs.txt','a') as file:
-                file.write(processed_text+'\n')
-            return True
-    return False
-
-
-async def warning(message, reason, purge=False):  #deletion of message and keeping trace of user
-    author = message.author
+  #test if robot
+  if message.author.bot:
+    global robot
+    robot+=1
+    robot%=3
+    if robot==0:
+      await message.channel.send(get_quote(6))
+    return
+  
+  ####################################################################
+  
+  #test if muted
+  if(message.author.id in userMuted)&(not testAdmin(message)):
     await message.delete()
-    await message.channel.send(f"{author} has been warned for {reason}")
+    return
+  
+  ####################################################################
 
-    #delete all message by author
-    if purge:
-        await message.channel.purge(limit=10,check=lambda m: m.author == author)
+  #respond with hello code 0
+  if(not message.author.id in userMuted)&(message.content.startswith("$")):
+    if get_respond(message.content,0):
+      await message.channel.send(get_quote(1))
+      return
 
-    #record warnings in df
-    members.loc[members['id'] == int(author.id), "warnings"] += 1
-    #update csv
-    members.to_csv("./data/club_member.csv", index=False)
-    #deliver punishment
+  ####################################################################
 
+  #test admin
+  if message.content.startswith("$")&testAdmin(message):
+  
+    ####################################################################
+  
+    #toggle swear code 1
+    if get_respond(message.content,2):
+      global is_spam
+      is_spam=not is_spam
+      await message.channel.send("||~~***SPAM SET TO "+str(is_spam).upper()+'***~~||')
+      return
 
-def reset_spamming():
-  global spam
-  while True:
-    if spam_detect:
-      for x in spam:
-        spam[x] = 0
-    time.sleep(3)
+    ####################################################################
 
+    #toggle spam code 2
+    elif get_respond(message.content,1):
+      global is_sware
+      is_sware=not is_sware
+      await message.channel.send("||~~***SWEAR SET TO "+str(is_sware).upper()+'***~~||')
+      return
 
-if __name__ == '__main__':
-    #load csv
-    members = pd.read_csv("./data/club_member.csv", index_col=False)
-    #load curse words before running
-    load_curse_words()
-    keep_alive()
-    client.run(TOKEN)
+    ####################################################################
+
+    #mute
+    elif get_respond(message.content,3):
+      mute=message.content.split()
+      userMuted.append(mute_id(mute))
+      userTimed.append(int(mute[2]))
+      await message.channel.send("||~~***MUTED "+mute[1]+" FOR "+mute[2]+" SECONDS***~~||")
+      return
+
+    ####################################################################
+
+    #unmute
+    elif get_respond(message.content,4):
+      mute=message.content.split()
+      userTimed.pop(userMuted.index(mute_id(mute)))
+      userMuted.remove(mute_id(mute))
+      await message.channel.send("||~~***UNMUTED "+mute[1]+"***~~||")
+      return
+    
+    ####################################################################
+
+    #allow chat in class
+    elif get_respond(message.content,5):
+      global is_chat
+      is_chat=not is_chat
+      await message.channel.send("||~~***CLASS CHAT SET TO "+str(is_chat).upper()+"***~~||")
+      return
+    
+    ####################################################################
+
+    #help
+    elif get_respond(message.content,6):
+      await message.channel.send(get_respond('',69420))
+      return
+    
+    ####################################################################
+
+    #respond with unknown message code 0
+    else:
+      await message.channel.send(get_quote(0))
+      return
+
+  ####################################################################
+
+  #if not admin
+  elif message.content.startswith("$")&(not testAdmin(message)):
+    await message.channel.send(get_quote(4))
+    return
+
+  ####################################################################
+
+  #test if muted
+  if message.author.id in userMuted:
+    await message.delete()
+    return
+
+  ####################################################################
+
+  #class time code 4
+  if get_class_chat()&is_chat:
+    await message.delete()
+    if add_user(message.author.id,1):
+      await message.channel.send(get_quote(5))
+      userMuted.append(message.author.id)
+      userTimed.append(30*60)
+    else:
+      await message.channel.send(get_quote(7))
+    return
+
+  ####################################################################
+
+  #sweare code 2
+  if get_sware_words(message.content)&is_sware:
+    await message.delete()
+    if add_user(message.author.id,0):
+      await message.channel.send(get_quote(5))
+      userMuted.append(message.author.id)
+      userTimed.append(40*60)
+    else:
+      await message.channel.send(get_quote(2))
+    return
+
+  ####################################################################
+
+  #spam code 3
+  if get_spam(message.author.id,datetime.now().hour*60*60+datetime.now().minute*60+datetime.now().second)&is_spam:
+    await message.delete()
+    if add_user(message.author.id,1):
+      await message.channel.send(get_quote(5))
+      userMuted.append(message.author.id)
+      userTimed.append(30*60)
+    else:
+      await message.channel.send(get_quote(3))
+    return
+
+####################################################################
+#-------------------------------------------------------------------
+
+keep_alive()
+threading.Thread(target=muteUnmuteUser).start()
+
+####################################################################
+
+client.run(os.environ['_TOKEN_'])
