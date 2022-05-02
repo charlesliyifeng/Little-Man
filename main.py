@@ -7,6 +7,7 @@ import os
 import threading
 from keep_alive import keep_alive
 import pytz
+import random
 
 
 TOKEN = os.environ['TOKEN']
@@ -35,7 +36,8 @@ async def on_ready():
 #list of commands
 @client.command(name='hello', help='Say hello to the bot!')
 async def say_hello(ctx):
-    await ctx.send("Hello! Good to see you.")
+    helloMessage=["Hello! Good to see you.","Hi!","Hello! I'm Litte Man"]
+    await ctx.send(helloMessage[helloMessage[random.randint(0,2)])
 
 
 @client.command(name='commands', help='list of commands')
