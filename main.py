@@ -8,6 +8,8 @@ import threading
 from keep_alive import keep_alive
 import pytz
 import random
+import json
+import requests
 
 
 TOKEN = os.environ['TOKEN']
@@ -39,6 +41,12 @@ async def say_hello(ctx):
     helloMessage=["Hello! Good to see you.","Hi!","Hello! I'm Litte Man"]
     await ctx.send(helloMessage[random.randint(0,2)])
 
+
+@client.command(name='Inspire',help='Get a random quote from a famouse person')#By DrKahl'sRobot
+async def inspire(ctx):
+    respond=requests.get("https://zenquotes.io/api/random")
+    jsonData=json.loads(rest.text)
+    await ctx.send(jsonData[0]['q']+' -'+jsonData[0]['a'])
 
 @client.command(name='commands', help='list of commands')
 async def commands(ctx):
