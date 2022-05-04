@@ -50,7 +50,7 @@ async def inspire(ctx):
 
 @client.command(name='commands', help='list of commands')
 async def commands(ctx):
-  await ctx.send("Universal commands: !hello, !isJavascriptGood, !isPythonGood, !CodingHelp [message] (Case sensitive)")
+  await ctx.send("Universal commands: !hello, !Inspire, !isJavascriptGood, !isPythonGood, !CodingHelp [message] (Case sensitive)")
   if ctx.author in admins:
     await ctx.send("Admin commands: !load_members, !toggle_spam, !toggle_time, !toggle_swearing, !toggle_helper, !resolve [name], !resolve_all")
   if ctx.author in helpers:
