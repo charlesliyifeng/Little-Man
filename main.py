@@ -20,7 +20,7 @@ client = commands.Bot(intents=intents, command_prefix='!')
 users = []
 admins = []
 lazy_helpers = []
-helpers = []
+helpers = [] 
 spam = {}
 help_requests = {}
 spam_detect = True
