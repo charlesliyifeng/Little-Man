@@ -37,7 +37,7 @@ async def on_ready():
 @client.command(name='hello', help='Say hello to the bot!')
 async def say_hello(ctx):
     helloMessage=["Hello! Good to see you.","Hi!","Hello! I'm Litte Man"]
-    await ctx.send(helloMessage[helloMessage[random.randint(0,2)])
+    await ctx.send(helloMessage[random.randint(0,2)])
 
 
 @client.command(name='commands', help='list of commands')
