@@ -51,7 +51,7 @@ async def inspire(ctx):
 
 @client.command(name='commands', help='list of commands')
 async def commands(ctx):
-  await ctx.send("Universal commands: !hello, !Inspire, !isScriptGood [coding language] !CodingHelp [message] (Case sensitive)")
+  await ctx.send("Universal commands: !hello, !Inspire, !isScriptGood [coding language] (Case non-sensitive) !CodingHelp [message] (Case sensitive)")
   if ctx.author in admins:
     await ctx.send("Admin commands: !load_members, !toggle_spam, !toggle_time, !toggle_swearing, !toggle_helper, !resolve [name], !resolve_all")
   if ctx.author in helpers:
@@ -59,7 +59,7 @@ async def commands(ctx):
 
 
 @client.command(name='isScriptGood',help='Discover the correct option for a spesific coding language')#By DrKahl'sRobot
-async def commands(ctx,args):
+async def commands(ctx,args=None):
   languagesResponses=[
     ['Python','Python is a high-level, interpreted, interactive and object-oriented scripting language. Python is designed to be highly readable. It uses English keywords frequently where as other languages use punctuation, and it has fewer syntactical constructions than other languages.'],
     ['Javascript','JavaScript (often shortened to JS) is a lightweight, interpreted, object-oriented language with first-class functions, and is best known as the scripting language for Web pages, but it\'s used in many non-browser environments as well.'],
@@ -80,7 +80,7 @@ async def commands(ctx,args):
     if i[0]==args:
       await ctx.send(i[1])
       return
-  await ctx.send(tempCombine)
+  await ctx.send(tempCombine[0:len(tempCombine)-2]+'.')
 
 @client.command(name='load_members')
 async def load_members(ctx=None):
