@@ -8,6 +8,8 @@ import threading
 from keep_alive import keep_alive
 import pytz
 import random
+import json
+import requests
 
 
 TOKEN = os.environ['TOKEN']
@@ -40,9 +42,16 @@ async def say_hello(ctx):
     await ctx.send(helloMessage[random.randint(0,2)])
 
 
+@client.command(name='Inspire',help='Get a random quote from a famouse person')#By DrKahl'sRobot
+async def inspire(ctx):
+    respond=requests.get("https://zenquotes.io/api/random")
+    jsonData=json.loads(respond.text)
+    await ctx.send(jsonData[0]['q']+' -'+jsonData[0]['a'])
+  
+
 @client.command(name='commands', help='list of commands')
 async def commands(ctx):
-  await ctx.send("Universal commands: !hello, !isJavascriptGood, !isPythonGood, !CodingHelp [message] (Case sensitive)")
+  await ctx.send("Universal commands: !hello, !Inspire, !isJavascriptGood, !isPythonGood, !CodingHelp [message] (Case sensitive)")
   if ctx.author in admins:
     await ctx.send("Admin commands: !load_members, !toggle_spam, !toggle_time, !toggle_swearing, !toggle_helper, !resolve [name], !resolve_all")
   if ctx.author in helpers:
@@ -173,14 +182,20 @@ async def coding_help_resolve(ctx, name=None):
     if ctx.author in admins or (ctx.author in helpers and ctx.author not in lazy_helpers):
         if name in help_requests:
             del help_requests[name]
-            await ctx.message.delete()
+            try:
+              await ctx.message.delete()
+            except:
+              pass
             await ctx.send("Request resolved!")
             for helper in helpers:
               async for message in helper.history(limit=100):
                 if (not find_name(message.content)) and message.author == client.user:
                   await message.delete()
         else:
-            await ctx.message.delete()
+            try:
+              await ctx.message.delete()
+            except:
+              pass
             await ctx.send("Request not found")
     else:
         await ctx.send("Only active helpers and admins can resolve requests.")
@@ -193,7 +208,10 @@ async def resolve_all(ctx):
       async for message in helper.history(limit=100):
         if message.author == client.user:
           await message.delete()
-    await ctx.message.delete()
+    try:
+      await ctx.message.delete()
+    except:
+      pass
     await ctx.send("All requests resolved!")
   else:
     await ctx.send("Insufficent privileges")
