@@ -27,11 +27,18 @@ spam_detect = True
 swear_detect = True
 time_detect = True
 languagesResponses=[]
-with open('data/helpCode.json') as f:
-  t=f.read().split('𒐪')
-  for i in t:
-    languagesResponses.append(i.split('𒐫'))
-  print(languagesResponses)
+
+def tempGetS():
+  with open('data/helpCode.json') as f:
+    t=f.read().split('𒐪')
+    r=[]
+    s=[]
+    for i in t:
+      r.append(i.split('𒐫')[0])
+      s.append(i.split('𒐫')[1])
+    languagesResponses.append(r)
+    languagesResponses.append(s)
+tempGetS()
 
 
 @client.event
@@ -66,13 +73,10 @@ async def commands(ctx):
 
 @client.command(name='isScriptGood',help='Discover the correct option for a spesific coding language')#By DrKahl'sRobot
 async def commands(ctx,args=None):
-  tempCombine='Coding languages: '
-  for i in languagesResponses:
-    tempCombine+=i[0]+', '
-    if i[0]==args:
-      await ctx.send(i[1])
-      return
-  await ctx.send(tempCombine[0:len(tempCombine)-2])
+  if args in languagesResponses[0]:
+    await ctx.send(languagesResponses[1][languagesResponses[0].index(args)])
+    return
+  await ctx.send('Coding languages: '+', '.join(languagesResponses[0]))
 
 @client.command(name='load_members')
 async def load_members(ctx=None):
