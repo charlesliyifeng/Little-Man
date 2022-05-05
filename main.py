@@ -47,26 +47,40 @@ async def inspire(ctx):
     respond=requests.get("https://zenquotes.io/api/random")
     jsonData=json.loads(respond.text)
     await ctx.send(jsonData[0]['q']+' -'+jsonData[0]['a'])
-  
+
 
 @client.command(name='commands', help='list of commands')
 async def commands(ctx):
-  await ctx.send("Universal commands: !hello, !Inspire, !isJavascriptGood, !isPythonGood, !CodingHelp [message] (Case sensitive)")
+  await ctx.send("Universal commands: !hello, !Inspire, !isScriptGood [coding language] !CodingHelp [message] (Case sensitive)")
   if ctx.author in admins:
     await ctx.send("Admin commands: !load_members, !toggle_spam, !toggle_time, !toggle_swearing, !toggle_helper, !resolve [name], !resolve_all")
   if ctx.author in helpers:
     await ctx.send("Helper commands: !toggle_helper, !resolve [name]")
 
 
-@client.command(name='isJavascriptGood',help='Discover the correct opinion of Javascript.')
-async def javascript_good(ctx):
-    await ctx.send("Absolutely!")
-
-
-@client.command(name='isPythonGood',help='Discover the correct opinion of Python.')
-async def python_good(ctx):
-    await ctx.send("What's Python")
-
+@client.command(name='isScriptGood',help='Discover the correct option for a spesific coding language')#By DrKahl'sRobot
+async def commands(ctx,args):
+  languagesResponses=[
+    ['Python','Python is a high-level, interpreted, interactive and object-oriented scripting language. Python is designed to be highly readable. It uses English keywords frequently where as other languages use punctuation, and it has fewer syntactical constructions than other languages.'],
+    ['Javascript','JavaScript (often shortened to JS) is a lightweight, interpreted, object-oriented language with first-class functions, and is best known as the scripting language for Web pages, but it\'s used in many non-browser environments as well.'],
+    ['C','C is a high-level and general-purpose programming language that is ideal for developing firmware or portable applications. Originally intended for writing system software, C was developed at Bell Labs by Dennis Ritchie for the Unix Operating System in the early 1970s.'],
+    ['C#','C# (pronounced "See Sharp") is a modern, object-oriented, and type-safe programming language. C# enables developers to build many types of secure and robust applications that run in . NET. C# has its roots in the C family of languages and will be immediately familiar to C, C++, Java, and JavaScript programmers.'],
+    ['C++','C++ (said C plus plus) is an object-oriented computer language created by notable computer scientist Bjorne Stroustrop as part of the evolution of the C family of languages. It was developed as a cross-platform improvement of C to provide developers with a higher degree of control over memory and system resources.'],
+    ['Java','Java is an object-oriented programming language that produces software for multiple platforms. When a programmer writes a Java application, the compiled code (known as bytecode) runs on most operating systems (OS), including Windows, Linux and Mac OS.'],
+    ['Swift','Swift is a general-purpose programming language built using a modern approach to safety, performance, and software design patterns. The goal of the Swift project is to create the best available language for uses ranging from systems programming, to mobile and desktop apps, scaling up to cloud services.'],
+    ['R','Although R is known as a programming language, many programmers refer to it as software that contains a language as well as a runtime environment. It includes conditionals, loops and user-defined recursive functions, as well as and input and output facilities that facilitate the use of predictive analytics.'],
+    ['Go','Go (also called Golang or Go language) is an open source programming language used for general purpose. Go was developed by Google engineers to create dependable and efficient software. Most similarly modeled after C, Go is statically typed and explicit.'],
+    ['HTML','The HyperText Markup Language or HTML is the standard markup language for documents designed to be displayed in a web browser. It can be assisted by technologies such as Cascading Style Sheets (CSS) and scripting languages such as JavaScript.'],
+    ['Scala','Scala is a strong statically typed general-purpose programming language which supports both object-oriented programming and functional programming. Designed to be concise, many of Scala\'s design decisions are aimed to address criticisms of Java. Scala.'],
+    ['Rust','Rust is a multi-paradigm, general-purpose programming language designed for performance and safety, especially safe concurrency. It is syntactically similar to C++, but can guarantee memory safety by using a borrow checker to validate references.']
+  ]
+  tempCombine='Coding languages: '
+  for i in languagesResponses:
+    tempCombine+=i[0]+', '
+    if i[0]==args:
+      await ctx.send(i[1])
+      return
+  await ctx.send(tempCombine)
 
 @client.command(name='load_members')
 async def load_members(ctx=None):
