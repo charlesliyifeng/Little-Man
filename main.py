@@ -42,7 +42,7 @@ async def say_hello(ctx):
     await ctx.send(helloMessage[random.randint(0,2)])
 
 
-@client.command(name='Inspire',help='Get a random quote from a famouse person')#By DrKahl'sRobot
+@client.command(name='inspire',help='Get a random quote from a famouse person')#By DrKahl'sRobot
 async def inspire(ctx):
     respond=requests.get("https://zenquotes.io/api/random")
     jsonData=json.loads(respond.text)
@@ -51,14 +51,14 @@ async def inspire(ctx):
 
 @client.command(name='commands', help='list of commands')
 async def commands(ctx):
-  await ctx.send("Universal commands: !hello, !Inspire, !isScriptGood [coding language] (Case sensitive) !CodingHelp [message] (Case sensitive)")
+  await ctx.send("Universal commands: !hello, !inspire, !isScriptGood [coding language] (Case sensitive) !codingHelp [message] (Case sensitive)")
   if ctx.author in admins:
     await ctx.send("Admin commands: !load_members, !toggle_spam, !toggle_time, !toggle_swearing, !toggle_helper, !resolve [name], !resolve_all")
   if ctx.author in helpers:
     await ctx.send("Helper commands: !toggle_helper, !resolve [name]")
 
 
-@client.command(name='isScriptGood',help='Discover the correct option for a spesific coding language')#By DrKahl'sRobot
+@client.command(name='isScriptGood',help='Discover the correct option for a specific coding language')#By DrKahl'sRobot
 async def isScriptGood(ctx,arg=None):
   lang = {
     'python':'Python is a high-level, interpreted, interactive and object-oriented scripting language. Python is designed to be highly readable. It uses English keywords frequently where as other languages use punctuation, and it has fewer syntactical constructions than other languages.',
@@ -169,7 +169,7 @@ async def toggle_helper(ctx):
     await ctx.send("Insufficent privileges")
        
 
-@client.command(name='CodingHelp', help='ask for help')
+@client.command(name='codingHelp', help='ask for help')
 async def coding_help(ctx, *, message=None):
   message = message or "not specified"
   if ctx.author.name in help_requests:
