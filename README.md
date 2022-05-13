@@ -1,7 +1,7 @@
 # Little-Man
 A discord bot responsible for managing Macleans Coding Club.
 
-## todo list
+## To do list
 1. Command: /isJavascriptGood, Result: “no” is outputted in chat - done
 2. check_time - done
 3. check_swearing - done
@@ -12,3 +12,7 @@ A discord bot responsible for managing Macleans Coding Club.
 8. link google classroom updates - Incomplete
 9. send warning - done
 10. toggle warnings - done
+
+## Added
+1. More hello messages
+2. Command: isScriptGood helping people understand coding languages
