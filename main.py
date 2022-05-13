@@ -38,7 +38,7 @@ async def on_ready():
 #list of commands
 @client.command(name='hello', help='Say hello to the bot!')
 async def say_hello(ctx):
-    helloMessage=["Hello! Good to see you.","Hi!","Hello! I'm Litte Man"]
+    helloMessage=["Hello! Good to see you.","Hi!","Hello! I'm Litte Man."]
     await ctx.send(helloMessage[random.randint(0,2)])
 
 
@@ -59,7 +59,7 @@ async def commands(ctx):
 
 
 @client.command(name='isScriptGood',help='Discover the correct option for a specific coding language')#By DrKahl'sRobot
-async def isScriptGood(ctx,arg=None):
+async def isScriptGood(ctx,arg=None):#27 languages
   lang = {
     'python':'Python is a high-level, interpreted, interactive and object-oriented scripting language. Python is designed to be highly readable. It uses English keywords frequently where as other languages use punctuation, and it has fewer syntactical constructions than other languages.',
     'javascript':'JavaScript (often shortened to JS) is a lightweight, interpreted, object-oriented language with first-class functions, and is best known as the scripting language for Web pages, but it\'s used in many non-browser environments as well.',
@@ -72,13 +72,29 @@ async def isScriptGood(ctx,arg=None):
     'go':'Go (also called Golang or Go language) is an open source programming language used for general purpose. Go was developed by Google engineers to create dependable and efficient software. Most similarly modeled after C, Go is statically typed and explicit.',
     'html':'The HyperText Markup Language or HTML is the standard markup language for documents designed to be displayed in a web browser. It can be assisted by technologies such as Cascading Style Sheets (CSS) and scripting languages such as JavaScript.',
     'scala':'Scala is a strong statically typed general-purpose programming language which supports both object-oriented programming and functional programming. Designed to be concise, many of Scala\'s design decisions are aimed to address criticisms of Java. Scala.',
-    'rust':'Rust is a multi-paradigm, general-purpose programming language designed for performance and safety, especially safe concurrency. It is syntactically similar to C++, but can guarantee memory safety by using a borrow checker to validate references.'
+    'rust':'Rust is a multi-paradigm, general-purpose programming language designed for performance and safety, especially safe concurrency. It is syntactically similar to C++, but can guarantee memory safety by using a borrow checker to validate references.',
+    'typescript':'TypeScript is a programming language developed and maintained by Microsoft. It is a strict syntactical superset of JavaScript and adds optional static typing to the language. It is designed for the development of large applications and transpiles to JavaScript. As it is a superset of JavaScript, existing JavaScript programs are also valid TypeScript programs.',
+    'f#':'F# (pronounced F sharp) is a functional-first, general purpose, strongly typed, multi-paradigm programming language that encompasses functional, imperative, and object-oriented programming methods.',
+    'perl':'Perl is a family of script programming languages that is similar in syntax to the C language. It is an older, open source, general use, interpreted language. Perl was developed with usability in mind. Its efficient design lets developers do a lot with a little bit of code.',
+    'ruby':'Ruby is dynamically typed and uses garbage collection and just-in-time compilation. It supports multiple programming paradigms, including procedural, object-oriented, and functional programming. According to the creator, Ruby was influenced by Perl, Smalltalk, Eiffel, Ada, BASIC, and Lisp.',
+    'kotlin':'Kotlin is a cross-platform, statically typed, general-purpose programming language with type inference. Kotlin is designed to interoperate fully with Java, and the JVM version of Kotlin\'s standard library depends on the Java Class Library, but type inference allows its syntax to be more concise. Kotlin mainly targets the JVM, but also compiles to JavaScript (e.g., for frontend web applications using React) or native code via LLVM (e.g., for native iOS apps sharing business logic with Android apps). Language development costs are borne by JetBrains, while the Kotlin Foundation protects the Kotlin trademark.',
+    'basic':'BASIC (Beginners\' All-purpose Symbolic Instruction Code) is a family of general-purpose, high-level programming languages designed for ease of use. The original version was created by John G. Kemeny, Thomas E. Kurtz and Mary Kenneth Keller at Dartmouth College in 1964. They wanted to enable students in non-scientific fields to use computers. At the time, nearly all computers required writing custom software, which only scientists and mathematicians tended to learn.',
+    'sql':'Basically, SQL stands for Structured Query Language which is basically a language used by databases. This language allows to handle the information using tables and shows a language to query these tables and other objects related (views, functions, procedures, etc.).',
+    'php':'PHP is a server side scripting language that is embedded in HTML. It is used to manage dynamic content, databases, session tracking, even build entire e-commerce sites. It is integrated with a number of popular databases, including MySQL, PostgreSQL, Oracle, Sybase, Informix, and Microsoft SQL Server.',
+    'dart':'Dart is an object-oriented, class-based, garbage-collected language with C-style syntax. It can compile to either native code or JavaScript, and supports interfaces, mixins, abstract classes, reified generics and type inference.',
+    'elixir':'Elixir is a functional, concurrent, general-purpose programming language that runs on the BEAM virtual machine which is also used to implement the Erlang programming language. Elixir builds on top of Erlang and shares the same abstractions for building distributed, fault-tolerant applications.',
+    'clojure':'Clojure is a dialect of Lisp, and shares with Lisp the code-as-data philosophy and a powerful macro system. Clojure is predominantly a functional programming language, and features a rich set of immutable, persistent data structures.',
+    'julia':'Julia is a high-level, high-performance, dynamic programming language. While it is a general-purpose language and can be used to write any application, many of its features are well suited for numerical analysis and computational science. Tier 3: 32-bit ARM, PowerPC, AMD (ROCm) GPUs.',
+    'pascal':'Pascal is an imperative and procedural programming language, designed by Niklaus Wirth as a small, efficient language intended to encourage good programming practices using structured programming and data structuring. It is named in honour of the French mathematician, philosopher and physicist Blaise Pascal.',
+    'matlab':'MATLAB is an abbreviation for "matrix laboratory." While other programming languages usually work with numbers one at a time, MATLAB® operates on whole matrices and arrays. Language fundamentals include basic operations, such as creating variables, array indexing, arithmetic, and data types.',
+    'objective-c':'Objective-C is the primary programming language you use when writing software for OS X and iOS. It\'s a superset of the C programming language and provides object-oriented capabilities and a dynamic runtime.',
+    'rank':'https://devathon.com/blog/wp-content/uploads/sites/2/2020/11/PYPL-graph.jpg \n https://devathon.com/blog/wp-content/uploads/sites/2/2020/11/TIOBE-graph.jpg \n https://devathon.com/blog/wp-content/uploads/sites/2/2020/11/GitHub-graph.jpg'
   }
 
   if arg.lower() in lang:
     await ctx.send(lang[arg.lower()])
   else:
-    await ctx.send("that is not a programming language")
+    await ctx.send("That is not a programming language (Type '!isScriptGood Rank' for help)")
   return
 
 @client.command(name='load_members')
