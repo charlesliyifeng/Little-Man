@@ -199,13 +199,16 @@ async def coding_help(ctx, *, message=None):
     await ctx.message.delete()
     await ctx.send("request denied, you already have a pending help request.")
   else:
+    if len(message)<2:
+                        await ctx.send('Oof, please send a request for')
+                        return
     help_requests[ctx.author.name] = message
     message = f"{ctx.author} needs help with: {help_requests[ctx.author.name]}"
     await ctx.message.delete()
     await ctx.send("request received, please await response from the helpers.")
     for helper in helpers:
       if helper not in lazy_helpers:
-        await helper.send(message)
+                    await helper.send(message)
     
 def find_name(message):
   for key in help_requests:
