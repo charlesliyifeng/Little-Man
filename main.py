@@ -86,7 +86,7 @@ using namespace std;
 //Personal favourite
 
 int main() {
-    cout<<"Hello World!");
+    cout<<"Hello World!";
     return 0;
 }''',
         'java':'''class HelloWorld {
