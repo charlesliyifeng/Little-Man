@@ -42,13 +42,6 @@ async def say_hello(ctx):
     await ctx.send(helloMessage[random.randint(0,2)])
 
 
-@client.command(name='inspire',help='Get a random quote from a famouse person')#By DrKahl'sRobot
-async def inspire(ctx):
-    respond=requests.get("https://zenquotes.io/api/random")
-    jsonData=json.loads(respond.text)
-    await ctx.send(jsonData[0]['q']+' -'+jsonData[0]['a'])
-
-
 @client.command(name='commands', help='list of commands')
 async def commands(ctx):
   await ctx.send("Universal commands: !hello, !inspire, !isScriptGood [coding language] (Case sensitive) !codingHelp [message] (Case sensitive)")
@@ -57,6 +50,70 @@ async def commands(ctx):
   if ctx.author in helpers:
     await ctx.send("Helper commands: !toggle_helper, !resolve [name]")
 
+
+@client.command(name='inspire',help='Get a random quote from a famouse person')#By DrKahl'sRobot
+async def inspire(ctx):
+    respond=requests.get("https://zenquotes.io/api/random")
+    jsonData=json.loads(respond.text)
+    await ctx.send(jsonData[0]['q']+' -'+jsonData[0]['a'])
+@client.command(name='helloWorld', help='Hello World program in each languages')async def helloWorldFunction(ctx,arg=None):#NOT SURE IF IT WORKD OR NOT
+	#By DrKahl'sRobot
+	#By DrKahl'sRobot
+    lang={
+        'python':'print("Hello World!")',
+        'javascript':'console.log("Hello world!")',
+        'c':'''#include <stdio.h>
+
+int main() {
+   printf("Hello World!");
+   return 0;
+}''',
+        'c#':'''using System;
+
+namespace HelloWorld
+{
+    class Hello
+    {         
+        static void Main(string[] args)
+        {
+            Console.WriteLine("Hello World!");
+        }
+    }
+}''',
+        'c++':'''#include <iostream>
+using namespace std;
+
+//Personal favourite
+
+int main() {
+    cout<<"Hello World!";
+    return 0;
+}''',
+        'java':'''class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello World!"); 
+    }
+}''',
+        'ruby':'puts "Hello World!"',
+        'perl':'''use strict;
+use warnings;
+
+print("Hello World!");''',
+        'rust':'''fn main() {
+    println!("Hello World!");
+}'''
+        }
+    
+
+
+
+
+
+
+    if arg.lower()in lang:
+        await ctx.send(arg[0].upper()+arg[1:].lower()+':\n\n```'+lang[arg.lower()]+'```')
+    else:
+        await ctx.send("Sorry for unrecognized languages! Add more in main.py if you want.")#By DrKahl'sRobot
 
 @client.command(name='isScriptGood',help='Discover the correct option for a specific coding language')#By DrKahl'sRobot
 async def isScriptGood(ctx,arg=None):#27 languages
@@ -199,13 +256,16 @@ async def coding_help(ctx, *, message=None):
     await ctx.message.delete()
     await ctx.send("request denied, you already have a pending help request.")
   else:
+    if len(message)<2:
+                        await ctx.send('Oof, please send a request for')
+                        return
     help_requests[ctx.author.name] = message
     message = f"{ctx.author} needs help with: {help_requests[ctx.author.name]}"
     await ctx.message.delete()
     await ctx.send("request received, please await response from the helpers.")
     for helper in helpers:
       if helper not in lazy_helpers:
-        await helper.send(message)
+                    await helper.send(message)
     
 def find_name(message):
   for key in help_requests:
